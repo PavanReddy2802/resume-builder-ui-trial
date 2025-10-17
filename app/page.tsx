@@ -3,6 +3,7 @@
 
 import { useState } from 'react'; 
 import { mockResumeData } from "../data/mockResumeData"; 
+import React from 'react'; // Ensure React is imported for type safety
 
 // --- Initializing data for editable headings ---
 const initialHeadings = {
@@ -62,16 +63,16 @@ export default function Home() {
 
   const resume = resumeData; // For convenience
 
-  /* --- CRUD FUNCTIONS (CREATE) - FIX APPLIED HERE --- */
-  const addEntry = (category: ResumeKeys, template: any) => { // Type added to 'category'
+  /* --- CRUD FUNCTIONS (CREATE) - FIX APPLIED HERE: EXPLICIT TYPES --- */
+  const addEntry = (category: ResumeKeys, template: any) => { // Resolved implicit 'any' on category
     setResumeData(prevData => ({
       ...prevData,
       [category]: [...(prevData as any)[category], template]
     }));
   };
 
-  /* --- CRUD FUNCTIONS (DELETE) - FIX APPLIED HERE --- */
-  const removeEntry = (category: ResumeKeys, indexToRemove: number) => { // Type added to 'category'
+  /* --- CRUD FUNCTIONS (DELETE) - FIX APPLIED HERE: EXPLICIT TYPES --- */
+  const removeEntry = (category: ResumeKeys, indexToRemove: number) => { // Resolved implicit 'any' on category
     setResumeData(prevData => {
         const updatedArray = (prevData as any)[category].filter((_: any, i: number) => i !== indexToRemove);
         return {
@@ -82,7 +83,7 @@ export default function Home() {
   };
 
 
-  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE - Type Fix Applied Here) --- */
+  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE) --- */
   const handleLiveEdit = (category: CategoryType, field: string, newValue: string | string[], index?: number) => {
     
     // Check if we are editing a HEADING
@@ -99,7 +100,6 @@ export default function Home() {
             // Update items in arrays (Experience, Education, Projects)
             const updatedArray = prevDataAny[category].map((item: any, i: number) => {
                 if (i === index) {
-                    // FIX: Using string literal property access with 'as any'
                     return { ...item, [field]: newValue };
                 }
                 return item;
@@ -126,7 +126,7 @@ export default function Home() {
     const resumeDataAny = resumeData as any;
 
     if (category === 'headings') {
-        // FIX APPLIED HERE: Asserts that 'field' is a valid HeadingKeys when accessing 'headings'
+        // Asserts that 'field' is a valid HeadingKeys when accessing 'headings'
         currentValue = headings[field as HeadingKeys] || ''; 
     } else if (index !== undefined) {
         currentValue = resumeDataAny[category][index][field] || '';
