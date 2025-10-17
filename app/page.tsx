@@ -13,6 +13,13 @@ const initialHeadings = {
     education: 'EDUCATION',
 };
 
+// Define the type for the headings keys
+type HeadingKeys = keyof typeof initialHeadings;
+// Define a union type for the valid category keys in the resumeData object
+type ResumeKeys = 'experience' | 'education' | 'projects' | 'summary' | 'personal';
+type CategoryType = ResumeKeys | 'headings'; // Union for the handleLiveEdit category argument
+
+
 // --- Templates for new entries (CRITICAL FOR 'ADD' BUTTONS) ---
 const newEducationTemplate = {
     institution: "New University/Course",
@@ -56,17 +63,17 @@ export default function Home() {
   const resume = resumeData; // For convenience
 
   /* --- CRUD FUNCTIONS (CREATE) --- */
-  const addEntry = (category, template) => {
+  const addEntry = (category: ResumeKeys, template: any) => {
     setResumeData(prevData => ({
       ...prevData,
-      [category]: [...prevData[category], template]
+      [category]: [...(prevData as any)[category], template]
     }));
   };
 
   /* --- CRUD FUNCTIONS (DELETE) --- */
-  const removeEntry = (category, indexToRemove) => {
+  const removeEntry = (category: ResumeKeys, indexToRemove: number) => {
     setResumeData(prevData => {
-        const updatedArray = prevData[category].filter((_, i) => i !== indexToRemove);
+        const updatedArray = (prevData as any)[category].filter((_: any, i: number) => i !== indexToRemove);
         return {
             ...prevData,
             [category]: updatedArray
@@ -75,20 +82,22 @@ export default function Home() {
   };
 
 
-  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE - For single-line fields/headings) --- */
-  const handleLiveEdit = (category: string, field: string, newValue: string, index?: number) => {
+  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE - Type Fix Applied Here) --- */
+  const handleLiveEdit = (category: CategoryType, field: string, newValue: string | string[], index?: number) => {
     
     // Check if we are editing a HEADING
     if (category === 'headings') {
-        setHeadings(prev => ({ ...prev, [field]: newValue.toUpperCase() }));
+        setHeadings(prev => ({ ...prev, [field as HeadingKeys]: (newValue as string).toUpperCase() }));
         return;
     }
 
-    // Helper function to handle content state updates
+    // Handle content state updates
     setResumeData(prevData => {
+        const prevDataAny = prevData as any;
+
         if (index !== undefined) {
             // Update items in arrays (Experience, Education, Projects)
-            const updatedArray = prevData[category].map((item, i) => {
+            const updatedArray = prevDataAny[category].map((item: any, i: number) => {
                 if (i === index) {
                     return { ...item, [field]: newValue };
                 }
@@ -100,7 +109,7 @@ export default function Home() {
         // Update simple top-level fields (Personal, Summary)
         return {
             ...prevData,
-            [category]: category === 'summary' ? newValue : { ...prevData[category], [field]: newValue },
+            [category]: category === 'summary' ? newValue : { ...prevDataAny[category], [field]: newValue },
         };
     });
   };
@@ -108,21 +117,24 @@ export default function Home() {
 
 
   /* --- RENDER FUNCTION FOR EDITABLE FIELDS (ContentEditable for single lines) --- */
-  const EditableText = ({ tag, category, field, index, className, style }) => {
+  const EditableText = ({ tag, category, field, index, className, style }: any) => { 
     const Tag = tag || 'span';
     
     // Determine the current value from the state
     let currentValue = '';
+    const resumeDataAny = resumeData as any;
+
     if (category === 'headings') {
-        currentValue = headings[field] || '';
+        // FIX APPLIED HERE: Asserts that 'field' is a valid HeadingKeys when accessing 'headings'
+        currentValue = headings[field as HeadingKeys] || ''; 
     } else if (index !== undefined) {
-        currentValue = resumeData[category][index][field] || '';
+        currentValue = resumeDataAny[category][index][field] || '';
     } else if (category === 'personal') {
-        currentValue = resumeData.personal[field] || '';
+        currentValue = resumeDataAny.personal[field] || '';
     }
     
-    const handleBlur = (e) => {
-        handleLiveEdit(category, field, e.currentTarget.textContent, index);
+    const handleBlur = (e: React.FocusEvent<HTMLElement>) => { 
+        handleLiveEdit(category, field, e.currentTarget.textContent || '', index);
     };
 
     return (
@@ -141,7 +153,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen bg-gray-100"> 
       
-      {/* 1. Customization Panel (1/3 width, structured by resume sections) */}
+      {/* 1. Customization Panel (1/3 width, with dedicated editing sections) */}
       <div className="w-1/3 p-6 border-r border-gray-300 bg-white shadow-lg sticky top-0 h-screen overflow-y-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Resume Customizer
@@ -153,8 +165,8 @@ export default function Home() {
             Editing Mode
           </h3>
           <p className="text-sm text-gray-700 mb-4">
-                To Edit (Single-line): Click directly on any text (Name, Title, Date) on the resume to update it instantly.
-                To Edit (Multi-line): Use the sections below for descriptions and achievements.
+                **Direct Edit:** Click on any single text field (Name, Dates, Title) on the resume to update it instantly.
+                **Multi-line Edit:** Use the sections below for descriptions and achievements.
           </p>
         </div>
 
@@ -166,7 +178,7 @@ export default function Home() {
         {/* --- 1. DEDICATED SUMMARY EDITOR (Multi-line focus) --- */}
         <div className="mb-8 border-b border-gray-200 pb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Edit: Summary
+            Edit Professional Summary
           </h3>
           <textarea
             rows={6}
@@ -216,7 +228,7 @@ export default function Home() {
                                 // Logic to update the achievement array item
                                 const newAchievements = [...job.achievements];
                                 newAchievements[achIndex] = e.target.value;
-                                handleLiveEdit('experience', 'achievements', newAchievements, jobIndex);
+                                handleLiveEdit('experience', 'achievements', newAchievements, jobIndex); 
                             }} 
                         />
                     ))}
@@ -341,7 +353,7 @@ export default function Home() {
       <div className="w-2/3 p-8">
         <div 
           className={`max-w-3xl mx-auto p-10 shadow-2xl rounded-lg ${theme} ${fontStyle}`} 
-          style={{backgroundColor: 'var(--paper-bg)'}} // FIX: Uses CSS variable for paper color
+          style={{backgroundColor: 'var(--paper-bg)'}} // Uses CSS variable for paper color
         > 
           
           {/* A. Header Section */}
