@@ -1,8 +1,10 @@
 // app/page.tsx
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react'; 
 import { mockResumeData } from "../data/mockResumeData"; 
+import React from 'react'; 
 
 // --- Initializing data for editable headings ---
 const initialHeadings = {
@@ -12,6 +14,13 @@ const initialHeadings = {
     projects: 'KEY PROJECTS',
     education: 'EDUCATION',
 };
+
+// Define the type for the headings keys
+type HeadingKeys = keyof typeof initialHeadings;
+// Define a union type for the valid resume data category keys
+type ResumeKeys = 'experience' | 'education' | 'projects' | 'summary' | 'personal';
+type CategoryType = ResumeKeys | 'headings'; 
+
 
 // --- Templates for new entries (CRITICAL FOR 'ADD' BUTTONS) ---
 const newEducationTemplate = {
@@ -40,33 +49,26 @@ const newProjectTemplate = {
     isVerified: false,
 };
 
-// Define Resume Data Keys for type safety
-type ResumeKeys = keyof typeof mockResumeData;
 
 export default function Home() {
-  // 1. State for all resume content
   const [resumeData, setResumeData] = useState(mockResumeData); 
-  // 2. State for editable headings
   const [headings, setHeadings] = useState(initialHeadings);
-  // 3. State for the active theme (accent color)
   const [theme, setTheme] = useState("default"); 
-  // 4. State for the active font style
   const [fontStyle, setFontStyle] = useState("font-style-default");
-  // 5. State for the paper background color
   const [paperBg, setPaperBg] = useState("paper-bg-white"); 
 
-  const resume = resumeData; // For convenience
+  const resume = resumeData; 
 
-  /* --- CRUD FUNCTIONS (CREATE) - TYPES ADDED --- */
-  const addEntry = (category: ResumeKeys, template: any) => { // Type added to 'category'
+  /* --- CRUD FUNCTIONS (CREATE) --- */
+  const addEntry = (category: ResumeKeys, template: any) => {
     setResumeData(prevData => ({
       ...prevData,
       [category]: [...(prevData as any)[category], template]
     }));
   };
 
-  /* --- CRUD FUNCTIONS (DELETE) - TYPES ADDED --- */
-  const removeEntry = (category: ResumeKeys, indexToRemove: number) => { // Type added to 'category'
+  /* --- CRUD FUNCTIONS (DELETE) --- */
+  const removeEntry = (category: ResumeKeys, indexToRemove: number) => {
     setResumeData(prevData => {
         const updatedArray = (prevData as any)[category].filter((_: any, i: number) => i !== indexToRemove);
         return {
@@ -77,20 +79,19 @@ export default function Home() {
   };
 
 
-  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE - For single-line fields/headings) - TYPES ADDED --- */
-  const handleLiveEdit = (category: string, field: string, newValue: string, index?: number) => { // Types added
+  /* --- UNIVERSAL LIVE EDITING FUNCTION (UPDATE) --- */
+  const handleLiveEdit = (category: CategoryType, field: string, newValue: string | string[], index?: number) => {
     
-    // Check if we are editing a HEADING
     if (category === 'headings') {
-        setHeadings(prev => ({ ...prev, [field]: newValue.toUpperCase() }));
+        setHeadings(prev => ({ ...prev, [field as HeadingKeys]: (newValue as string).toUpperCase() }));
         return;
     }
 
-    // Helper function to handle content state updates
     setResumeData(prevData => {
+        const prevDataAny = prevData as any;
+
         if (index !== undefined) {
-            // Update items in arrays (Experience, Education, Projects)
-            const updatedArray = (prevData as any)[category].map((item: any, i: number) => {
+            const updatedArray = prevDataAny[category].map((item: any, i: number) => {
                 if (i === index) {
                     return { ...item, [field]: newValue };
                 }
@@ -99,31 +100,31 @@ export default function Home() {
             return { ...prevData, [category]: updatedArray };
         }
         
-        // Update simple top-level fields (Personal, Summary)
         return {
             ...prevData,
-            [category]: category === 'summary' ? newValue : { ...(prevData as any)[category], [field]: newValue },
+            [category]: category === 'summary' ? newValue : { ...prevDataAny[category], [field]: newValue },
         };
     });
   };
   /* --- END UNIVERSAL LIVE EDITING FUNCTION --- */
 
 
-  /* --- RENDER FUNCTION FOR EDITABLE FIELDS (ContentEditable for single lines) - TYPES ADDED --- */
-  const EditableText = ({ tag, category, field, index, className, style }: any) => { // Type added to props
+  /* --- RENDER FUNCTION FOR EDITABLE FIELDS (ContentEditable for single lines) --- */
+  const EditableText = ({ tag, category, field, index, className, style }: any) => { 
     const Tag = tag || 'span';
     
-    // Determine the current value from the state
     let currentValue = '';
+    const resumeDataAny = resumeData as any;
+
     if (category === 'headings') {
-        currentValue = headings[field] || '';
+        currentValue = headings[field as HeadingKeys] || ''; 
     } else if (index !== undefined) {
-        currentValue = (resumeData as any)[category][index][field] || '';
+        currentValue = resumeDataAny[category][index][field] || '';
     } else if (category === 'personal') {
-        currentValue = (resumeData as any).personal[field] || '';
+        currentValue = resumeDataAny.personal[field] || '';
     }
     
-    const handleBlur = (e: React.FocusEvent<HTMLElement>) => { // Type added to event
+    const handleBlur = (e: React.FocusEvent<HTMLElement>) => { 
         handleLiveEdit(category, field, e.currentTarget.textContent || '', index);
     };
 
@@ -161,14 +162,12 @@ export default function Home() {
         </div>
 
 
-        {/* ========================================= */}
-        {/* === SECTION-SPECIFIC EDITING FORMS (Mirroring Resume Flow) === */}
-        {/* ========================================= */}
+        {/* --- SECTION-SPECIFIC EDITING FORMS (Mirroring Resume Flow) --- */}
 
         {/* --- 1. DEDICATED SUMMARY EDITOR (Multi-line focus) --- */}
         <div className="mb-8 border-b border-gray-200 pb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Edit: Summary
+            Edit Professional Summary
           </h3>
           <textarea
             rows={6}
@@ -218,7 +217,7 @@ export default function Home() {
                                 // Logic to update the achievement array item
                                 const newAchievements = [...job.achievements];
                                 newAchievements[achIndex] = e.target.value;
-                                handleLiveEdit('experience', 'achievements', newAchievements, jobIndex);
+                                handleLiveEdit('experience', 'achievements', newAchievements, jobIndex); 
                             }} 
                         />
                     ))}
@@ -301,9 +300,7 @@ export default function Home() {
         </div>
         
         
-        {/* ========================================= */}
-        {/* === STYLE CUSTOMIZERS (Standard) === */}
-        {/* ========================================= */}
+        {/* --- STYLE CUSTOMIZERS (Standard) --- */}
 
         {/* Background Customizer */}
         <div className="mb-6 pt-6 border-t border-gray-200">
@@ -407,7 +404,6 @@ export default function Home() {
               </div>
             ))}
           </section>
-
           {/* E. Projects Section */}
           <section className="mb-6">
             <EditableText tag="h2" category="headings" field="projects" className="section-title"/>
