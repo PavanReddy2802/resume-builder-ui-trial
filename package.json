@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.19",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
     "next": "15.5.6",
     "postcss": "^8.4.38",
     "react": "19.1.0",

@@ -5,6 +5,10 @@
 import { useState } from 'react'; 
 import { mockResumeData } from "../data/mockResumeData"; 
 import React from 'react'; 
+// NEW IMPORTS: For PDF download functionality
+import html2canvas from 'html2canvas'; 
+import jsPDF from 'jspdf';
+
 
 // --- Initializing data for editable headings ---
 const initialHeadings = {
@@ -58,6 +62,45 @@ export default function Home() {
   const [paperBg, setPaperBg] = useState("paper-bg-white"); 
 
   const resume = resumeData; 
+
+  /* --- DOWNLOAD PDF FUNCTION (NEW CORE LOGIC) --- */
+  const downloadPdf = async () => {
+    // The element we want to capture (the inner resume content)
+    const resumeElement = document.getElementById('resume-content'); 
+
+    if (resumeElement) {
+        // 1. Convert HTML element to canvas (image)
+        const canvas = await html2canvas(resumeElement, { scale: 2 }); // Use scale 2 for high resolution
+        const imgData = canvas.toDataURL('image/png');
+
+        // 2. Initialize jsPDF
+        const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait, millimeters, A4 size
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+
+        let position = 0;
+
+        // 3. Add the image to the PDF (handling multi-page if resume is long)
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        // 4. Download the file
+        pdf.save(`${resume.personal.name.replace(/\s/g, '_')}_Resume.pdf`);
+    } else {
+        alert("Error: Resume content not found for download.");
+    }
+  };
+  /* --- END DOWNLOAD PDF FUNCTION --- */
+
 
   /* --- CRUD FUNCTIONS (CREATE) --- */
   const addEntry = (category: ResumeKeys, template: any) => {
@@ -149,6 +192,14 @@ export default function Home() {
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Resume Customizer
         </h2>
+
+        {/* --- PDF DOWNLOAD BUTTON (NEW LOCATION) --- */}
+        <button 
+            onClick={downloadPdf}
+            className="mb-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded text-lg transition shadow-lg"
+        >
+            ⬇️ Download Resume (PDF)
+        </button>
         
         {/* --- LIVE EDITING GUIDE --- */}
         <div className="mb-8 border-b border-gray-200 pb-6">
@@ -206,7 +257,6 @@ export default function Home() {
                     </button>
 
                     <p className="text-xs font-medium text-gray-700 mt-3 mb-1">Achievements (Bullet Points)</p>
-                    {/* Achievements are still an array of strings, handled by separate textareas */}
                     {job.achievements.map((achievement, achIndex) => (
                         <textarea
                             key={achIndex}
@@ -339,8 +389,9 @@ export default function Home() {
       {/* 2. Resume Preview (2/3 width) - ALL FEATURES ACTIVE */}
       <div className="w-2/3 p-8">
         <div 
+          id="resume-content" /* ID ADDED HERE FOR PDF DOWNLOAD */
           className={`max-w-3xl mx-auto p-10 shadow-2xl rounded-lg ${theme} ${fontStyle}`} 
-          style={{backgroundColor: 'var(--paper-bg)'}} // Uses CSS variable for paper color
+          style={{backgroundColor: 'var(--paper-bg)'}} 
         > 
           
           {/* A. Header Section */}
@@ -404,6 +455,7 @@ export default function Home() {
               </div>
             ))}
           </section>
+
           {/* E. Projects Section */}
           <section className="mb-6">
             <EditableText tag="h2" category="headings" field="projects" className="section-title"/>
