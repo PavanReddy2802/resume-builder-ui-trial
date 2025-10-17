@@ -380,7 +380,7 @@ export default function Home() {
             </div>
           </section>
 
-          /* ... (Experience, Projects, Education sections are correctly rendered here) ... */
+          /* ... (Remaining sections are correctly rendered here) ... */
           
         </div>
       </div>
