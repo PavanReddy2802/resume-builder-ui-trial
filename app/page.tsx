@@ -15,9 +15,9 @@ const initialHeadings = {
 
 // Define the type for the headings keys
 type HeadingKeys = keyof typeof initialHeadings;
-// Define a union type for the valid category keys in the resumeData object
+// Define a union type for the valid resume data category keys
 type ResumeKeys = 'experience' | 'education' | 'projects' | 'summary' | 'personal';
-type CategoryType = ResumeKeys | 'headings'; // Union for the handleLiveEdit category argument
+type CategoryType = ResumeKeys | 'headings'; 
 
 
 // --- Templates for new entries (CRITICAL FOR 'ADD' BUTTONS) ---
@@ -62,16 +62,16 @@ export default function Home() {
 
   const resume = resumeData; // For convenience
 
-  /* --- CRUD FUNCTIONS (CREATE) --- */
-  const addEntry = (category: ResumeKeys, template: any) => {
+  /* --- CRUD FUNCTIONS (CREATE) - FIX APPLIED HERE --- */
+  const addEntry = (category: ResumeKeys, template: any) => { // Type added to 'category'
     setResumeData(prevData => ({
       ...prevData,
       [category]: [...(prevData as any)[category], template]
     }));
   };
 
-  /* --- CRUD FUNCTIONS (DELETE) --- */
-  const removeEntry = (category: ResumeKeys, indexToRemove: number) => {
+  /* --- CRUD FUNCTIONS (DELETE) - FIX APPLIED HERE --- */
+  const removeEntry = (category: ResumeKeys, indexToRemove: number) => { // Type added to 'category'
     setResumeData(prevData => {
         const updatedArray = (prevData as any)[category].filter((_: any, i: number) => i !== indexToRemove);
         return {
@@ -99,6 +99,7 @@ export default function Home() {
             // Update items in arrays (Experience, Education, Projects)
             const updatedArray = prevDataAny[category].map((item: any, i: number) => {
                 if (i === index) {
+                    // FIX: Using string literal property access with 'as any'
                     return { ...item, [field]: newValue };
                 }
                 return item;
