@@ -206,7 +206,6 @@ export default function Home() {
                     </button>
 
                     <p className="text-xs font-medium text-gray-700 mt-3 mb-1">Achievements (Bullet Points)</p>
-                    {/* Achievements are still an array of strings, handled by separate textareas */}
                     {job.achievements.map((achievement, achIndex) => (
                         <textarea
                             key={achIndex}
@@ -214,7 +213,6 @@ export default function Home() {
                             className="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-indigo-500 focus:border-indigo-500 mb-2"
                             value={achievement}
                             onChange={(e) => {
-                                // Logic to update the achievement array item
                                 const newAchievements = [...job.achievements];
                                 newAchievements[achIndex] = e.target.value;
                                 handleLiveEdit('experience', 'achievements', newAchievements, jobIndex); 
@@ -300,9 +298,7 @@ export default function Home() {
         </div>
         
         
-        {/* ========================================= */}
-        {/* === STYLE CUSTOMIZERS (Standard) === */}
-        {/* ========================================= */}
+        {/* --- STYLE CUSTOMIZERS (Standard) --- */}
 
         {/* Background Customizer */}
         <div className="mb-6 pt-6 border-t border-gray-200">
