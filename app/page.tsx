@@ -359,7 +359,28 @@ export default function Home() {
             </div>
           </header>
 
-          /* ... (Remaining sections are correctly rendered here) ... */
+          {/* B. Summary Section */}
+          <section className="mb-6">
+            <EditableText tag="h2" category="headings" field="summary" className="section-title"/>
+            <p className="text-gray-700 leading-relaxed text-sm">
+                {resume.summary}
+            </p>
+          </section>
+
+          {/* C. Skills Section */}
+          <section className="mb-6">
+            <EditableText tag="h2" category="headings" field="skills" className="section-title"/>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <p className="font-semibold text-gray-800">Languages:</p>
+              <span className="text-gray-700">{resume.skills.languages.join(" • ")}</span>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm mt-1">
+              <p className="font-semibold text-gray-800">Frameworks:</p>
+              <span className="text-gray-700">{resume.skills.frameworks.join(" • ")}</span> 
+            </div>
+          </section>
+
+          /* ... (Experience, Projects, Education sections are correctly rendered here) ... */
           
         </div>
       </div>
