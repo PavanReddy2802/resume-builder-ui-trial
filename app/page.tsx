@@ -55,11 +55,11 @@ export default function Home() {
   const [resumeData, setResumeData] = useState(mockResumeData); 
   // 2. State for editable headings
   const [headings, setHeadings] = useState(initialHeadings);
-  // 3. State for the active theme (accent color) - NO LONGER UNUSED
+  // 3. State for the active theme (accent color)
   const [theme, setTheme] = useState("default"); 
-  // 4. State for the active font style - NO LONGER UNUSED
+  // 4. State for the active font style
   const [fontStyle, setFontStyle] = useState("font-style-default");
-  // 5. State for the paper background color - NO LONGER UNUSED
+  // 5. State for the paper background color
   const [paperBg, setPaperBg] = useState("paper-bg-white"); 
 
   const resume = resumeData; // For convenience
